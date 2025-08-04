@@ -1,0 +1,100 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+
+# --- 1. Tạo dữ liệu ---
+print("1. Dữ liệu gốc về Diện tích nhà và Giá:")
+data = {
+    'Dien_tich_feet_vuong': [1400, 1600, 1700, 1875, 1100, 1550, 2350, 2450, 1425, 1700],
+    'Gia_ngan_USD': [245, 312, 325, 345, 205, 289, 420, 405, 260, 300]
+}
+df = pd.DataFrame(data)
+print(df)
+print("\n" + "="*70 + "\n")
+
+# --- 2. Xác định biến độc lập (X) và biến phụ thuộc (Y) ---
+# X (biến độc lập) cần là mảng 2D (hoặc DataFrame có 1 cột)
+X = df[['Dien_tich_feet_vuong']]
+# Y (biến phụ thuộc) là một Series (hoặc mảng 1D)
+Y = df['Gia_ngan_USD']
+
+print("2. Biến độc lập (X - Diện tích) và biến phụ thuộc (Y - Giá) đã được định nghĩa.")
+print(f"Kiểu dữ liệu của X: {type(X)}")
+print(f"Kích thước của X: {X.shape}") # (số hàng, số cột)
+print("\n" + "="*70 + "\n")
+
+# --- 3. Trực quan hóa dữ liệu ban đầu ---
+print("3. Trực quan hóa dữ liệu ban đầu:")
+plt.figure(figsize=(10, 6))
+plt.scatter(X, Y, color='blue', label='Dữ liệu thực tế')
+plt.title('Mối quan hệ giữa Diện tích nhà và Giá')
+plt.xlabel('Diện tích (feet vuông)')
+plt.ylabel('Giá (ngàn USD)')
+plt.grid(True)
+plt.legend()
+plt.show()
+print("Bạn có thể thấy một mối quan hệ tuyến tính khá rõ ràng giữa Diện tích và Giá.\n")
+print("="*70 + "\n")
+
+# --- 4. Xây dựng và huấn luyện mô hình Linear Regression ---
+print("4. Xây dựng và huấn luyện mô hình Linear Regression...")
+model = LinearRegression() # Khởi tạo mô hình hồi quy tuyến tính
+model.fit(X, Y) # Huấn luyện mô hình: tìm ra đường thẳng phù hợp nhất với dữ liệu X và Y
+
+print("Mô hình đã được huấn luyện thành công.")
+print("\n" + "="*70 + "\n")
+
+# --- 5. Lấy và in ra các hệ số của mô hình ---
+# model.coef_ là hệ số góc (slope) - m
+# model.intercept_ là điểm cắt trục Y (Y-intercept) - b
+m = model.coef_[0]
+b = model.intercept_
+
+print("5. Các hệ số của mô hình:")
+print(f"Hệ số góc (slope, m): {m:.2f}")
+print(f"Điểm cắt trục Y (Y-intercept, b): {b:.2f}")
+print(f"\nPhương trình hồi quy tuyến tính: Giá = {m:.2f} * Diện tích + {b:.2f}")
+print(f"Ý nghĩa: Cứ mỗi feet vuông diện tích tăng thêm, giá nhà dự kiến sẽ tăng thêm {m:.2f} ngàn USD.")
+print(f"Nếu diện tích là 0 (điểm cắt trục Y), giá nhà dự kiến là {b:.2f} ngàn USD (trong thực tế, giá trị này thường không có ý nghĩa vật lý).\n")
+print("="*70 + "\n")
+
+# --- 6. Thực hiện dự đoán ---
+print("6. Thực hiện dự đoán giá nhà cho các diện tích mới:")
+# Tạo một mảng NumPy với các diện tích mới cần dự đoán
+# .reshape(-1, 1) để đảm bảo nó là mảng 2D, yêu cầu của model.predict()
+dien_tich_moi = np.array([1000, 2000, 2500]).reshape(-1, 1)
+gia_du_doan_moi = model.predict(dien_tich_moi)
+
+for i, dien_tich in enumerate(dien_tich_moi):
+    print(f"Với diện tích {dien_tich[0]:.0f} feet vuông, giá nhà dự kiến: {gia_du_doan_moi[i]:.2f} ngàn USD")
+print("\n" + "="*70 + "\n")
+
+# --- 7. Đánh giá mô hình ---
+print("7. Đánh giá mô hình:")
+Y_pred = model.predict(X) # Dự đoán giá trên chính dữ liệu đã dùng để huấn luyện
+
+mse = mean_squared_error(Y, Y_pred) # Tính toán sai số bình phương trung bình
+rmse = np.sqrt(mse) # Tính toán căn bậc hai của MSE
+r2 = r2_score(Y, Y_pred) # Tính toán R-squared
+
+print(f"Mean Squared Error (MSE): {mse:.2f}")
+print(f"Root Mean Squared Error (RMSE): {rmse:.2f}")
+print(f"R-squared (R2): {r2:.2f}")
+print("Ý nghĩa của R2: Giá trị R2 càng gần 1, mô hình càng phù hợp tốt với dữ liệu, tức là 'Diện tích' giải thích được phần lớn sự biến động của 'Giá'.\n")
+print("="*70 + "\n")
+
+# --- 8. Trực quan hóa đường hồi quy ---
+print("8. Trực quan hóa đường hồi quy:")
+plt.figure(figsize=(10, 6))
+plt.scatter(X, Y, color='blue', label='Dữ liệu thực tế') # Vẽ các điểm dữ liệu thực tế
+plt.plot(X, Y_pred, color='red', label='Đường hồi quy dự đoán') # Vẽ đường hồi quy (dựa trên dự đoán của mô hình)
+plt.title('Linear Regression: Dự đoán Giá nhà dựa trên Diện tích')
+plt.xlabel('Diện tích (feet vuông)')
+plt.ylabel('Giá (ngàn USD)')
+plt.grid(True)
+plt.legend()
+plt.show()
+
+print("\n--- Hoàn thành ví dụ Linear Regression Dự đoán Giá nhà ---")
